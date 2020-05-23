@@ -15,7 +15,7 @@ let numberFormat = null;
 
 window.addEventListener('load', () => {
   tabCountries = document.querySelector('#tabCountries');
-  tabCountries = document.querySelector('#tabCountries');
+  tabFavorites = document.querySelector('#tabFavorites');
 
   countCountries = document.querySelector('#countCountries');
   countFavorites = document.querySelector('#countFavorites');
@@ -41,11 +41,12 @@ async function fetchContries() {
       id: numericCode,
       name: translations.pt,
       population,
+      formattedPopulation:formatNumber(population),
       flag,
     }
   })
 
-  favoritesContries = allCountries;
+
 
   render();
 }
@@ -62,7 +63,7 @@ function renderCountryList() {
   let countriesHTML = '<div>';
 
   allCountries.forEach(country => {
-    const { name, flag, id, population } = country;
+    const { name, flag, id, population, formattedPopulation } = country;
 
     const countryHTML = `
       <div class="country">
@@ -75,7 +76,7 @@ function renderCountryList() {
         <div>
           <ul>
             <li>${name}</li>
-            <li>${population}</li>
+            <li>${formattedPopulation}</li>
           </ul>
         </div>
       </div>
@@ -85,20 +86,23 @@ function renderCountryList() {
 
   });
 
+  countriesHTML += '</div>';
+
   tabCountries.innerHTML = countriesHTML;
+
 
 }
 
 function renderFavorites() {
-  let favoritesHTML = '<div>'
+  let favoritesHTML = '<div>';
 
   favoritesContries.forEach(country => {
-    const { name, flag, id, population } = country;
+    const { name, flag, id, population,formattedPopulation } = country;
 
     const favoriteCountryHTML = `
       <div class='country'>
         <div>
-          <a id="${id}" class="waves-effect wave-light btn">+</a>
+          <a id="${id}" class="waves-effect wave-light btn red darken-4">-</a>
         </div>
         <div>
           <img src="${flag}" alt="${name}">
@@ -106,7 +110,7 @@ function renderFavorites() {
         <div>
           <ul>
             <li>${name}</li>
-            <li>${population}</li>
+            <li>${formattedPopulation}</li>
           </ul>
         </div>
       </div>
@@ -116,9 +120,75 @@ function renderFavorites() {
 
   });
 
-  //favoritesHTML += '</div>'
+  favoritesHTML += '</div>'
+
   tabFavorites.innerHTML = favoritesHTML;
 }
 
-function renderSummary() { }
-function handleCountryButtons() { }
+function renderSummary() {
+  countCountries.textContent = allCountries.length;
+  countFavorites.textContent = favoritesContries.length;
+
+  const totalPopulation= allCountries.reduce((acc, cur) => {
+    return acc + cur.population;
+  }, 0);
+
+  const totalFavorites = favoritesContries.reduce((acc, cur) => {
+    return acc + cur.population;
+  }, 0);
+
+  totalPopulationList.textContent = formatNumber(totalPopulation);
+  totalPopulationFavorites.textContent = formatNumber(totalFavorites);
+}
+
+function handleCountryButtons() {
+  const countryButtons = Array.from(tabCountries.querySelectorAll('.btn'));
+  const favoriteButtons = Array.from(tabFavorites.querySelectorAll('.btn'));
+
+  countryButtons.forEach(button => {
+    button.addEventListener('click', () => addToFavorites(button.id));
+  });
+  favoriteButtons.forEach(button => {
+    button.addEventListener('click', () => removeFromFavorite(button.id));
+  });
+
+}
+
+function addToFavorites(id) {
+  const countryToAdd = allCountries.find(country => country.id === id);
+
+  favoritesContries = [...favoritesContries, countryToAdd];
+
+  favoritesContries.sort((a, b) => {
+    return a.name.localeCompare(b.name);
+  });
+
+  allCountries = allCountries.filter(country => country.id !== id);
+  console.log(favoritesContries.length);
+  console.log(allCountries.length);
+  
+
+  render();
+}
+
+function removeFromFavorite(id) {
+  const countryToRemove = favoritesContries.find(country => country.id === id);
+
+  allCountries = [...allCountries, countryToRemove];
+
+  allCountries.sort((a, b) => {
+    return a.name.localeCompare(b.name);
+  });
+
+  favoritesContries = favoritesContries.filter(country => country.id !== id);
+  
+  console.log(allCountries.length);
+  console.log(favoritesContries.length);
+  
+
+  render();
+ }
+
+ function formatNumber(number){
+   return numberFormat.format(number);
+ }
